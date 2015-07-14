@@ -63,3 +63,6 @@ target/
 
 # Pycharm files
 .idea/*
+
+# Swap files
+*.swp
