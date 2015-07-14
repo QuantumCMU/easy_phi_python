@@ -2,49 +2,43 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import logging
-#import easy_phi_client
+
 
 import settings
 from easy_phi_client import PythonClient
 
-
-
 # parse parameters
 parser = argparse.ArgumentParser(
-description="Send API calls to easy_phi web application. "
-			"Results will be printed to console")
-parser.add_argument('-s', '--slot', help='slot number, int')
+description = "Send API calls to easy_phi web application. "
+			  "Results will be printed to console")
+parser.add_argument('-s', '--slot', default=0, help='slot number, int')
+parser.add_argument('-scpi', '--scpi_command', help='scpi command, char')
 args = parser.parse_args()
 
-if args.slot is None:
-	slot = 0
-else:
-	slot = args.slot
-
+slot = args.slot
+scpi = args.scpi_command
 pc = PythonClient(settings.api_token)
 
 # platform info
 pi = pc.get_platform_info()
 print 'Platform info: ' + pi
-  # logging.debug "Raw platform info JSON:\n %s", json.dumps(pi)
 
 # module info
 mi = pc.get_module_info(slot)
-print 'Information about nmodule in slot {}: '.format(slot) + mi
+print 'Information about module in slot {}: '.format(slot) + mi
 
 # modules list
 ml = pc.get_modules_list()
-print('Modules list: ' + ml)
+print 'Modules list: ' + ml
 
 # module scpi list
 scpl = pc.get_module_scpi_list(slot)
 print 'SCPI list for module in slot {}: '.format(slot) + scpl
 
-# module locked?
-# mlck = pc.lock_module()
-# print('Status of the module: ' + mlck)
+# module lock/unlock
+mlck = pc.lock_module(slot)
+print 'Module lock/unlock status: ' + mlck
 
 # send scpi
-scpi = pc.send_scpi(slot)
-print 'Status of the module: ' + scpi
+scpi = pc.send_scpi(slot, scpi)
+print 'SCPI command sent to module in slot {}. Response is '.format(slot) + scpi.read()
