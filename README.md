@@ -1,5 +1,7 @@
 # Easy_phi python client
-Python client demonstrates how to work with easy_phi web application
+Python client demonstrates how to work with easy_phi web application. 
+- The library of the client implemented in 'easy_phi_client.py' file
+- Sample app stored in 'app.py' file
 
 
 Setup
@@ -25,7 +27,7 @@ Running the client
 
 To get the results, run:
 
-    python client.py
+    python app.py
 
 Available parameters:
 
@@ -36,4 +38,4 @@ This is in development now. In the future, you will be able to find it in your e
 
 Example of running the client with the parameters:
 
-    python client.py -s 3 -scpi '*IDN?'
+    python app.py -s 3 -scpi '*IDN?'
