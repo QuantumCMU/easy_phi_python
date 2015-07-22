@@ -1,60 +1,73 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import urllib
-import urllib2
 import logging
+import urllib
+import json
 
 
 class RestClient(object):
-    """THis class is a proxy for Easy Phi system REST API"""
+    """ Wrapper for Easy Phi platform REST API """
 
-    def __init__(self, base_url):
-        self.logger = logging.getLogger(__name__)
+    logger = logging.getLogger('easy_phi client')
+    base_url = None
+    api_token = None
+
+    def __init__(self, base_url='http://localhost:8000', api_token=None):
         self.baseURL = base_url
+        self.api_token = api_token
 
-    def _request(self, api_func, data=None):
-        url = self.baseURL + api_func
+    def _request(self, url, params={}, data=None):
+        if 'format' not in params:
+            params['format'] = 'json'
+        query = '?' + urllib.urlencode(params)
+        full_url = ''.join((self.baseURL, url, query))
 
-        if data:
-            body = urllib.urlencode({'': data})
-            req = urllib2.Request(url, body)
-        else:
-            req = urllib2.Request(url)
+        self.logger.debug("Request url: %s", full_url)
 
-        try:
-            response = urllib2.urlopen(req)
-        except IOError:
-            self.logger.error('Failed to open url: ' + url)
-            raise
-        response = response.read()
-        self.logger.debug("Response from: " + response)
+        if self.api_token is not None:
+            # There are three ways to pass api token:
+            # 1. set cookie 'api_token' - more secure, but requires building
+            #       URL opener, just lazy to make it this time
+            # 2. HTTP Basic auth 'api_token:<token_value>' - not secure, but can
+            #       be done in couple lines of code
+            # 3. GET param - even less secure, but easiest
+            full_url += '&api_token=' + self.api_token
 
-        return response
+        response = urllib.urlopen(full_url, data)
+        response_text = response.read()
+
+        self.logger.debug("Response text: %s", response_text)
+
+        if params['format'] == 'json':
+            return json.loads(response_text)
+        return response_text
 
     def get_platform_info(self):
-        data = self._request('/api/v1/info')
-        return data
+        return self._request('/api/v1/info')
 
     def get_module_info(self, slot):
-        data = self._request('/api/v1/module?slot=' + str(slot))
-        return data
+        return self._request('/api/v1/module', {'slot': slot})
 
-    def get_modules_list(self):
-        data = self._request('/api/v1/modules_list')
-        return data
+    def get_module_names(self):
+        return self._request('/api/v1/modules_list')
 
-    def get_module_scpi_list(self, slot):
-        data = self._request('/api/v1/module_scpi_list?slot=' + str(slot))
-        return data
+    def get_supported_commands(self, slot):
+        return self._request('/api/v1/module_scpi_list', {'slot': slot})
 
     def lock_module(self, slot):
-        if slot != 0:
-            data = self._request('/api/v1/lock_module?slot=' + str(slot))
-        else:
-            data = 'Not a valid operation for Broadcast Module'
-        return data
+        if not self.api_token:
+            raise ValueError("System without api token don't use locks")
 
-    def send_scpi(self, slot, scpi):
-        data = self._request('/api/v1/send_scpi?slot=' + str(slot), scpi)
-        return data
+        if not 0 < slot < 32:
+            raise ValueError("Slot has to be integer in range 1..31")
+
+        return self._request('/api/v1/lock_module', {'slot': slot})
+
+    def unlock_module(self, slot):
+        raise NotImplementedError("Unfortunately, urllib is not ver convenient "
+                                  "for making DELETE requests, but we hope you "
+                                  "already get the idea how to use API.")
+
+    def scpi(self, slot, scpi):
+        return self._request('/api/v1/send_scpi', {'slot':slot}, scpi)

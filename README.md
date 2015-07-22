@@ -4,18 +4,6 @@ Python client demonstrates how to work with easy_phi web application.
 - Sample app stored in 'app.py' file
 
 
-Setup
-----
-
-Get the code:
-
-`git clone git@github.com:QuantumCMU/easy_phi_python.git`
-
-In order to adjust setting edit the following file:
-
-`settings.py`
-
-Following settings available:
 
 - `base_url` - http address of the Easy_phi_API web application
 
@@ -27,15 +15,18 @@ Running the client
 
 To get the results, run:
 
-    python app.py
+    python app.py <scpi command>
 
-Available parameters:
+e.g.:
 
-- `slot -s` - number of the slot in which particular module is connected (0 by default)
+    python app.py RAck:Size?
 
-- `scpi_command -scpi` - particular scpi command that will be sent to the module
-This is in development now. In the future, you will be able to find it in your easy_PHi_API security settings
+will return number of slots. By default, command will be broadcasted to all 
+modules and will return result from module connected to slot with lowest number.
 
-Example of running the client with the parameters:
+To see how to specify (host, api token and slot), run program with `--help` 
+parameter:
 
-    python app.py -s 3 -scpi '*IDN?'
+    python app.py --help
+    
+    
